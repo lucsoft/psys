@@ -43,9 +43,9 @@ export const APILogin = async (web: WebGen, myHistory: HTMLElement, renderHistor
         {
             const diff = login.user.currentpoints - localStorage.psysCurrentPoints;
             if (diff > 0)
-                web.elements.notify(`${login.user.currentpoints - localStorage.psysCurrentPoints} Punkt${diff > 1 ? 'e sind' : ' ist'} dazu gekommen!`)
+                web.elements.notify(`${(login.user.currentpoints - localStorage.psysCurrentPoints).toLocaleString()} Punkt${diff > 1 ? 'e sind' : ' ist'} dazu gekommen!`)
             else
-                web.elements.notify(`${-(login.user.currentpoints - localStorage.psysCurrentPoints)} Punkt${-diff > 1 ? 'e würden' : ' wurde'} abgezogen.`)
+                web.elements.notify(`${(-(login.user.currentpoints - localStorage.psysCurrentPoints)).toLocaleString()} Punkt${-diff > 1 ? 'e wurden' : ' wurde'} abgezogen.`)
 
         }
         localStorage.psysTable = JSON.stringify(login.user.history);

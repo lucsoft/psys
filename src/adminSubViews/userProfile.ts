@@ -134,7 +134,10 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
     button.style.display = "inline-flex";
     actionList.append(count, date, button);
 
-    const renderTable = () => [ ...data.history.map((x) =>
+    const renderTable = () => [ {
+        left: leftList,
+        right: actionList
+    }, ...data.history.map((x) =>
     {
         const type = JSON.parse(localStorage.psysTypes)[ x.typeId ];
         return ({
@@ -159,11 +162,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
                 }
             ]
         })
-    }),
-    {
-        left: leftList,
-        right: actionList
-    } ]
+    }) ]
     const pointhistory = list({}, ...renderTable())
 
     const isInvalid = () => data.email.includes('platzhalter');

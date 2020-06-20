@@ -316,11 +316,14 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
                 color: "red",
                 onclick: async () =>
                 {
+                    console.log(data.email, 'test');
                     const { APIUpdateAccount } = await import('../fetch/updateAccount');
                     await APIUpdateAccount(data.id, [ {
-                        new: data.email,
+                        new: email.value,
                         type: "email"
                     } ])
+                    web.elements.notify('Email wurde geändert!')
+                    area.innerHTML = "";
                 }
             }
         ] : [

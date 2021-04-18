@@ -2,9 +2,9 @@ import type { WebGen } from '@lucsoft/webgen';
 import { renderCreateAccount } from './adminSubViews/createAccount';
 import { renderManagePointsTypes } from './adminSubViews/managePointsTypes';
 import { renderUserProfile } from './adminSubViews/userProfile';
+import { refreshAdmindata } from "./fetch/admin";
 
-export function renderAdmin(web: WebGen, list: any[])
-{
+export function renderAdmin(web: WebGen, list: any[]) {
     const area = document.createElement('article');
 
     renderActions(area, web);
@@ -17,8 +17,7 @@ export function renderAdmin(web: WebGen, list: any[])
         mode: "hideBegin",
         actions: {
             close: () => { web.elements.fixedWindow(false, false) },
-            click: (entry) =>
-            {
+            click: (entry) => {
                 const user: any = list.find(x => x.id == entry.id);
                 area.innerHTML = "";
                 renderUserProfile({
@@ -31,23 +30,41 @@ export function renderAdmin(web: WebGen, list: any[])
                     street: user.street,
                     history: user.history
                 }, area, web);
+
+                refreshAdmindata().then(x => {
+                    list = x;
+                    const user = x.find((x: any) => x.id == entry.id);
+                    if (user) {
+                        area.lastChild?.remove();
+                        area.lastChild?.remove();
+
+                        renderUserProfile({
+                            create: user.create,
+                            email: user.email,
+                            id: entry.id,
+                            isAdmin: user.admin,
+                            name: user.name,
+                            currentpoints: user.currentpoints,
+                            street: user.street,
+                            history: user.history
+                        }, area, web);
+                    }
+                })
             }
         },
         index: list.map((x) =>
-            ({
-                id: x.id,
-                name: x.name.join(' '),
-                tags: [ x.email.includes('platzhalter') ? 'write-only' : undefined, x.admin ? 'admin' : undefined, x.currentpoints === min ? 'lowest' : undefined, x.currentpoints === max ? 'highest' : undefined ].filter(x => x != undefined) as string[]
-            }))
+        ({
+            id: x.id,
+            name: x.name.join(' '),
+            tags: [ x.email.includes('platzhalter') ? 'write-only' : undefined, x.admin ? 'admin' : undefined, x.currentpoints === min ? 'lowest' : undefined, x.currentpoints === max ? 'highest' : undefined ].filter(x => x != undefined) as string[]
+        }))
     });
     const last = search.last.querySelector('input');
     const test = list.filter(x => x.email.includes('platzhalter')).length;
 
 
-    last?.addEventListener("input", () =>
-    {
-        if (last.value === "")
-        {
+    last?.addEventListener("input", () => {
+        if (last.value === "") {
             area.innerHTML = "";
             renderActions(area, web);
         }
@@ -58,8 +75,7 @@ export function renderAdmin(web: WebGen, list: any[])
 
 }
 
-function renderActions(area: HTMLElement, web: WebGen)
-{
+function renderActions(area: HTMLElement, web: WebGen) {
     const subArea = document.createElement("article");
     web.elements.custom(area).cardButtons({
         columns: "auto",
@@ -69,8 +85,7 @@ function renderActions(area: HTMLElement, web: WebGen)
                 id: 'createAccount',
                 title: "Accounts",
                 value: "Erstellen sie hier Accounts",
-                onClick: (toggle, state) =>
-                {
+                onClick: (toggle, state) => {
                     document.querySelector('#changePointTypes')?.classList?.remove?.('active')
                     toggle('Erstellen sie hier Accounts')
                     subArea.innerHTML = "";
@@ -82,8 +97,7 @@ function renderActions(area: HTMLElement, web: WebGen)
                 id: 'changePointTypes',
                 title: "Punktetypen",
                 value: "Verwalten sie hier Punktetypen",
-                onClick: (toggle, state) =>
-                {
+                onClick: (toggle, state) => {
                     toggle('Verwalten sie hier Punktetypen')
                     document.querySelector('#createAccount')?.classList?.remove?.('active')
                     subArea.innerHTML = "";

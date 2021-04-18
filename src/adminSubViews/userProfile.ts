@@ -1,22 +1,18 @@
 import type { WebGen } from '@lucsoft/webgen';
 import type { UserData } from '../types';
-const timestamp = (raw: string) =>
-{
+const timestamp = (raw: string) => {
     const month = [ "Januar", "Februar", "Marz", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember" ];
-    if (raw.includes(' '))
-    {
+    if (raw.includes(' ')) {
         const splitTime = raw.split(' ');
         const year = splitTime[ 0 ].split('-').reverse().map(x => Number(x)).map((x, i) => i == 1 ? month[ x - 1 ] : x);
 
         return `${Number(year[ 0 ])}. ${year[ 1 ]} ${year[ 2 ]} ${splitTime[ 1 ]} Uhr`;
-    } else
-    {
+    } else {
         const splitTime = raw.split('.')
         return `${Number(splitTime[ 0 ])}. ${month[ Number(splitTime[ 1 ]) - 1 ]} ${splitTime[ 2 ]}`;
     }
 };
-const formatPointsEntry = (type: string, rawTimestamp: string, web: WebGen): HTMLElement =>
-{
+const formatPointsEntry = (type: string, rawTimestamp: string, web: WebGen): HTMLElement => {
     const { span } = web.elements.none().components;
 
     const div = document.createElement('div');
@@ -31,15 +27,12 @@ const formatPointsEntry = (type: string, rawTimestamp: string, web: WebGen): HTM
     div.append(main, date)
     return div;
 }
-function getDateTimestampFull()
-{
+function getDateTimestampFull() {
     const datee = new Date();
     return `${(datee.getDate() < 9 ? "0" : '')}${datee.getDate()}.${((datee.getMonth() + 1) < 9 ? "0" : '')}${datee.getMonth() + 1}.${datee.getFullYear()}`;
 }
-const removeAccount = (id: string) =>
-{
-    return new Promise(async (done) =>
-    {
+const removeAccount = (id: string) => {
+    return new Promise(async (done) => {
         fetch('https://punktesystem.drk-furtwangen.de/assets/beta.php', {
             method: "POST",
             body: JSON.stringify({
@@ -48,17 +41,14 @@ const removeAccount = (id: string) =>
                 password: localStorage.psysPassword,
                 target: id
             })
-        }).then(async (rsp) =>
-        {
+        }).then(async (rsp) => {
             const response = await rsp.json();
             done(response);
         })
     })
 };
-const resetAccount = (id: string) =>
-{
-    return new Promise(async (done) =>
-    {
+const resetAccount = (id: string) => {
+    return new Promise(async (done) => {
         fetch('https://punktesystem.drk-furtwangen.de/assets/beta.php', {
             method: "POST",
             body: JSON.stringify({
@@ -67,15 +57,13 @@ const resetAccount = (id: string) =>
                 password: localStorage.psysPassword,
                 target: id
             })
-        }).then(async (rsp) =>
-        {
+        }).then(async (rsp) => {
             const response = await rsp.json();
             done(response);
         })
     })
 };
-export async function renderUserProfile(data: UserData, area: HTMLElement, web: WebGen)
-{
+export async function renderUserProfile(data: UserData, area: HTMLElement, web: WebGen) {
     const { APIUpdateAccount } = await import('../fetch/updateAccount');
 
     const types: string[] = JSON.parse(localStorage.psysTypes);
@@ -87,8 +75,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
     customType.onkeyup = () => internalType = customType.value;
     let internalType = "0";
     const dropDown = dropdown({ small: true, default: 0 }, ...types.map((x, i) => ({
-        title: x, action: () =>
-        {
+        title: x, action: () => {
             internalType = i.toString();
             customType.style.display = "none";
         }
@@ -100,14 +87,13 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
     leftList.append(dropDown, customType)
     const actionList = document.createElement('div');
     actionList.style.display = "inline-block";
-    const date = input({ value: getDateTimestampFull(), width: "5rem" });
+
+    const date = input({ value: sessionStorage[ 'last-time' ] ?? getDateTimestampFull(), width: "5rem" });
     const count = input({ value: "1", type: "number", width: "5rem" });
     count.style.marginRight = "0rem";
     let enabled = true;
-    const createEntry = async (change = Number(count.value)) =>
-    {
-        if (date.value.length != 10 || date.value.split('.').length != 3 || Number.isNaN(Number(date.value.split(".").join(""))))
-        {
+    const createEntry = async (change = Number(count.value)) => {
+        if (date.value.length != 10 || date.value.split('.').length != 3 || Number.isNaN(Number(date.value.split(".").join("")))) {
             web.elements.notify('Keine Gültige angabe');
             return;
         }
@@ -115,6 +101,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
             return;
         enabled = false;
         button.style.opacity = "0.3";
+        sessionStorage[ 'last-time' ] = date.value;
         const response: any = await APIUpdateAccount(data.id, [ {
             type: "history",
             new: [ ...data.history, { change, typeId: internalType, from: date.value, id: new Date().getTime() } ]
@@ -137,8 +124,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
     const renderTable = () => [ {
         left: leftList,
         right: actionList
-    }, ...data.history.map((x) =>
-    {
+    }, ...data.history.map((x) => {
         const type = JSON.parse(localStorage.psysTypes)[ x.typeId ];
         return ({
             left: formatPointsEntry(!Number.isNaN(Number(x.typeId)) ? type : x.typeId, x.from, web),
@@ -146,8 +132,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
             actions: [
                 {
                     type: "delete",
-                    click: async () =>
-                    {
+                    click: async () => {
                         if (!enabled)
                             return;
                         enabled = false;
@@ -167,10 +152,8 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
 
     const isInvalid = () => data.email.includes('platzhalter');
     let email: HTMLInputElement;
-    if (isInvalid())
-    {
-        const applyStyle = (element: HTMLElement) =>
-        {
+    if (isInvalid()) {
+        const applyStyle = (element: HTMLElement) => {
             element.style.margin = "0";
             element.style.fontSize = "1rem";
             element.style.width = "19rem";
@@ -182,15 +165,12 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
         email.autofocus = true;
         applyStyle(email);
     }
-    else
-    {
+    else {
         email = span(data.email) as HTMLInputElement;
     }
     let editMode = false;
-    const renderUserDetails = () =>
-    {
-        if (editMode)
-        {
+    const renderUserDetails = () => {
+        if (editMode) {
             const NameList = document.createElement('span');
 
             const firstname = input({ width: "5rem", value: data.name[ 0 ] })
@@ -206,8 +186,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
             const street = input({ width: "10rem", value: data.street });
             street.style.marginRight = "0";
             const save = multiStateSwitch('small', {
-                title: 'Änderungen speichern', action: async () =>
-                {
+                title: 'Änderungen speichern', action: async () => {
 
                     const { APIUpdateAccount } = await import('../fetch/updateAccount');
                     await APIUpdateAccount(data.id, [
@@ -313,8 +292,7 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
             {
                 text: "Speichern",
                 color: "red",
-                onclick: async () =>
-                {
+                onclick: async () => {
                     console.log(data.email, 'test');
                     const { APIUpdateAccount } = await import('../fetch/updateAccount');
                     await APIUpdateAccount(data.id, [ {
@@ -326,42 +304,39 @@ export async function renderUserProfile(data: UserData, area: HTMLElement, web: 
                 }
             }
         ] : [
-                {
-                    text: "Bearbeiten",
-                    color: 'red',
-                    onclick: async () => { editMode = true; action(userDetails, 'value', renderUserDetails()) }
-                },
-                {
-                    text: "Passwort zurücksetzten",
-                    color: 'red',
-                    onclick: async () =>
-                    {
-                        web.elements.notify('Neues Passwort wird generiert...')
-                        await resetAccount(data.id);
-                        web.elements.notify('Neues Passwort gesetzt.');
-                        area.innerHTML = "";
-                    }
-                },
-                {
-                    text: "Löschen",
-                    color: 'red',
-                    onclick: async () =>
-                    {
-                        if (!check)
-                        {
-                            web.elements.notify('Sicher? Klicke erneut um zu bestätigen');
-                            check = true;
-                            return;
-                        }
-                        check = false;
-
-                        web.elements.notify('Account wird gelöscht...');
-                        await removeAccount(data.id);
-                        web.elements.notify('Account wurde gelöscht.');
-                        area.innerHTML = "";
-                    }
+            {
+                text: "Bearbeiten",
+                color: 'red',
+                onclick: async () => { editMode = true; action(userDetails, 'value', renderUserDetails()) }
+            },
+            {
+                text: "Passwort zurücksetzten",
+                color: 'red',
+                onclick: async () => {
+                    web.elements.notify('Neues Passwort wird generiert...')
+                    await resetAccount(data.id);
+                    web.elements.notify('Neues Passwort gesetzt.');
+                    area.innerHTML = "";
                 }
-            ]
+            },
+            {
+                text: "Löschen",
+                color: 'red',
+                onclick: async () => {
+                    if (!check) {
+                        web.elements.notify('Sicher? Klicke erneut um zu bestätigen');
+                        check = true;
+                        return;
+                    }
+                    check = false;
+
+                    web.elements.notify('Account wird gelöscht...');
+                    await removeAccount(data.id);
+                    web.elements.notify('Account wurde gelöscht.');
+                    area.innerHTML = "";
+                }
+            }
+        ]
     })
     if (!isInvalid())
         web.elements.custom(area).window({
